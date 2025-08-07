@@ -1,38 +1,37 @@
-/*
-This is a basic code to test if Your Waveshare Lasersensor works.
-Our goal is to create a timing gate so we won't use it as it is not reliable.
-Our athletes will be further away than 80cm from the laser which makes the laser too weak
-to detect a athlete running past.
-*/
+#include "Wire.h"
 #include <Arduino.h>
 
-// put function declarations here:
-int laserPin = 22;
+#define TOF10120_ADDR 0x52
 
 void setup()
 {
-  // put your setup code here, to run once:
-  pinMode(laserPin, INPUT);
-  Serial.begin(9600);
+  // initialize serial communication at 9600 bits per second:
+  Serial.begin(115200);
+  Wire.begin(21, 22);
+  delay(1000);
+  Serial.println("TOF10120 starting...");
 }
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
-  if (digitalRead(laserPin) == LOW)
+  Wire.beginTransmission(TOF10120_ADDR);
+  Wire.write(0x00); // Command to start reading distance
+  Wire.endTransmission();
+
+  Wire.requestFrom(TOF10120_ADDR, 2);
+  if (Wire.available() == 2)
   {
-    Serial.println("Obstacles");
+    uint8_t highByte = Wire.read();
+    uint8_t lowByte = Wire.read();
+
+    int distance = (highByte << 8) + lowByte;
+    Serial.print("Distance: ");
+    Serial.print(distance);
+    Serial.println(" mm");
   }
   else
   {
-    Serial.println("No Obstacles");
+    Serial.println("Failed to read from TOF10120");
   }
-  // delay(500);
+  delay(500);
 }
-
-// put function definitions here:
-/*
-int myFunction()
-{
-}
-*/
